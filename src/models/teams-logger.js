@@ -1,7 +1,6 @@
-const request = require('request-promise-native')
 const package = require('../../package.json')
 const os = require('os')
-
+const fetch = require('node-fetch')
 // find env hostname
 const hostname = os.hostname()
 
@@ -74,8 +73,8 @@ async function log () {
 
   // send message to room
   try {
-    const response = await request({
-      url: 'https://api.ciscospark.com/v1/messages',
+    await fetch('https://api.ciscospark.com/v1/messages',
+    {
       method: 'POST',
       headers: {
         Authorization: 'Bearer ' + process.env.WEBEX_BOT_TOKEN
@@ -84,8 +83,7 @@ async function log () {
         roomId: process.env.LOGS_ROOM_ID,
         text,
         markdown
-      },
-      json: true
+      }
     })
   } catch (e) {
     console.log('failed to log to Webex Teams room:', e.message)
