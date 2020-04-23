@@ -5,7 +5,6 @@ After=network.target
 [Service]
 Environment=PATH=/usr/bin:/usr/local/bin
 Environment=NODE_ENV=production
-Environment=NODE_EXTRA_CA_CERTS=/usr/share/ca-certificates/dcloud-root-ca.crt
 WorkingDirectory=/opt/dcloud/wxm-toolbox-api
 ExecStart=/usr/bin/node src/index
 Restart=on-failure
