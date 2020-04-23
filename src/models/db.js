@@ -16,7 +16,7 @@ if (!process.env.MONGO_URL) {
 
 // Connection URL
 const url = process.env.MONGO_URL
-const connectOptions = { useNewUrlParser: true }
+const connectOptions = { useNewUrlParser: true, useUnifiedTopology: true }
 
 module.exports = class DB {
   constructor (dbName = 'toolbox') {
