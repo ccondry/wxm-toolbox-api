@@ -1,0 +1,1 @@
+*/3 * * * * /bin/sh -c 'cd /opt/dcloud/wxm-toolbox-api && ./update.sh' 2>&1 | /usr/bin/logger -t cron-update-wxm-toolbox-api

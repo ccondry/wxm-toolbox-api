@@ -1,0 +1,2 @@
+# Allow 'administrator' user to restart wxm-toolbox-api service
+administrator ALL=NOPASSWD: /bin/systemctl restart wxm-toolbox-api.service
