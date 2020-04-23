@@ -17,7 +17,7 @@ router.get('/', async function (req, res, next) {
   try {
     console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
     // find provision data in our database
-    const data = provision.find(username)
+    const data = await provision.find(username)
     console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'successful')
     // if no data found, return empty object instead of null
     return res.status(200).send(data || {})
@@ -58,7 +58,10 @@ router.post('/', async function (req, res, next) {
     })
     // did we find an existing user?
     if (found) {
+      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - already provisioned.')
       // user exists - don't recreate
+      // mark user provisioned in our cloud db
+      await provision.set(username, userId)
       return res.status(200).send('User already provisioned. Not creating again.')
     } else {
       // user does not exist
@@ -78,13 +81,14 @@ router.post('/', async function (req, res, next) {
         // bad email address. return 400
         return res.status(400).send('Please use your corporate email address. Free email address domains like gmail.com are not valid here.')
       }
-      // create user
-      await wxm.createUser({
-        name: `${agentName} ${userId}`,
-        username: agentUsername,
-        email,
-        password
-      })
+
+      // don't really create user yet
+      // await wxm.createUser({
+      //   name: `${agentName} ${userId}`,
+      //   username: agentUsername,
+      //   email,
+      //   password
+      // })
 
       // log success
       console.log('user', username, userId, 'WXM provisioning successful for', agentUsername)
