@@ -5,6 +5,7 @@ const wxm = require('../models/wxm')
 
 // get provision status for current logged-in user from our database
 router.get('/', async function (req, res, next) {
+  console.log('request to get WXM provision status...')
   const username = req.user.username
   const userId = req.user.id
   const clientIp = req.clientIp
