@@ -94,6 +94,7 @@ const path = 'wxm'
 app.use('/api/v1/' + path + '/provision', require('./routes/provision'))
 // add user to webex teams room
 app.use('/api/v1/' + path + '/webex', require('./routes/webex'))
+app.use('/api/v1/' + path + '/version', require('./routes/version'))
 
 // Node HTTP module options
 const httpOptions = {
