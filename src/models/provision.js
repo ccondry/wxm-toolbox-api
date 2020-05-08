@@ -25,11 +25,15 @@ async function set (data) {
   }
 }
 
-function find (username) {
-  // console.log('finding provision info in mongo for wxm v1 for user', username)
-  // get user provision data from mongo db
-  const q = { username, demo: 'wxm', version: 'v1' }
-  // don't return record id
-  const projection = { _id: 0 }
-  return db.findOne('provision', q, {projection})
+async function find (username) {
+  try {
+    // console.log('finding provision info in mongo for wxm v1 for user', username)
+    // get user provision data from mongo db
+    const q = { username, demo: 'wxm', version: 'v1' }
+    // don't return record id
+    const projection = { _id: 0 }
+    return db.findOne('provision', q, {projection})
+  } catch (e) {
+    throw e
+  }
 }
