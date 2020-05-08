@@ -6,18 +6,23 @@ module.exports = {
   find
 }
 
-function set (username, id) {
-  // build provision data query
-  const q = { username, demo: 'wxm', version: 'v1' }
-  // build provision data object
-  const data = {
-    username,
-    id,
-    demo: 'wxm',
-    version: 'v1'
+async function set (data) {
+  try {
+    // build provision data query
+    const q = { username: data.username, demo: 'wxm', version: 'v1' }
+    // build provision data object on top of input data
+    const dbData = { demo: 'wxm', version: 'v1', ...data }
+    const existing = await db.findOne('provision', q)
+    if (existing) {
+      // update
+      await db.updateOne('provision', q, {$set: dbData})
+    } else {
+      // create new
+      await db.insert('provision', dbData)
+    }
+  } catch (e) {
+    throw e
   }
-  // add or update provision data to mongo db
-  return db.upsert('provision', q, data)
 }
 
 function find (username) {
