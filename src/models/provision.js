@@ -18,7 +18,7 @@ async function set (data) {
       await db.updateOne('provision', q, {$set: dbData})
     } else {
       // create new
-      await db.insert('provision', dbData)
+      await db.insertOne('provision', dbData)
     }
   } catch (e) {
     throw e
