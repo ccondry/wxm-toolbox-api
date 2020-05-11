@@ -57,7 +57,7 @@ router.post('/', async function (req, res, next) {
     const supervisorName = 'Rick Barrows'
     const agentUsername = `${agent}${userId}`
     const supervisorUsername = `${supervisor}${userId}`
-    const password = 'C1sco12345'
+    const password = 'C1sco12345!'
     // try the request body email first, then the user's toolbox email.
     // the UI should request the user's corporate email if they use gmail or
     // other free account for their toolbox email
