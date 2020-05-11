@@ -1,5 +1,5 @@
 [Unit]
-Description=dCloud Webex Experience Manager toolbox API
+Description=dCloud Webex Experience Management toolbox API
 After=network.target
 
 [Service]
