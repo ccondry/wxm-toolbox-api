@@ -3,6 +3,82 @@ const router = express.Router()
 const provision = require('../models/provision')
 const wxm = require('../models/wxm')
 
+// setPreference jobs need to be run synchronously
+const jobs = []
+
+// 5 second throttle on jobs
+const throttle = 5000
+
+// an async sleep function
+function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+// run jobs constantly, with a throttle
+async function runJobs () {
+  try {
+    // are there any jobs?
+    if (jobs.length) {
+      console.log('found', jobs.length, 'WXM set preference jobs...')
+      let changes = 0
+      // get preferences
+      const preferences = wxm.listPreferences()
+      // update preferences cache with each job's data
+      for (const job of jobs) {
+        // add agents and supervisors to Contact Center view
+        if (['agent', 'supervisor'].includes(job.role)) {
+          const viewName = 'Contact Center'
+          const view = preferences.views.find(v => v.viewName === viewName)
+          const users = view.globalSyndicated.users
+          if (users.includes(username)) {
+            // already in list
+            console.log(username, 'was already in the', viewName, 'view')
+          } else {
+            // add to list
+            console.log('adding', username, 'to the', viewName, 'view')
+            users.push(username)
+            changes++
+          }
+        }
+
+        // add supervisors to ATM, Website, Branch, Overall Experience
+        if (job.role === 'supervisor') {
+          const viewNames = ['ATM', 'Website', 'Branch', 'Overall Experience']
+          for (const viewName of viewNames) {
+            const view = preferences.views.find(v => v.viewName === viewName)
+            const users = view.globalSyndicated.users
+            if (users.includes(username)) {
+              // already in list
+              console.log(username, 'was already in the', viewName, 'view')
+            } else {
+              // add to list
+              console.log('adding', username, 'to the', viewName, 'view')
+              users.push(username)
+              changes++
+            }
+          }
+        }
+      }
+      if (changes > 0) {
+        // save updated preferences on server
+        await wxm.setPreferences(preferences)
+        console.log('saved WXM preferences for', jobs.length, 'usernames')
+      } else {
+        // no changes
+        console.log('no changes to save to WXM preferences.')
+      }
+    }
+  } catch (e) {
+    console.log('failed to get or save WXM preferences:', e.message)
+  }
+  // wait before running again
+  await sleep(throttle)
+  // run again
+  runJobs()
+}
+
+// start job runner
+runJobs()
 // const bannedDomains = [
 //   'gmail.com',
 //   'yahoo.com',
@@ -104,6 +180,12 @@ router.post('/', async function (req, res, next) {
       }
       console.log('options', options)
       await wxm.createUser(options)
+      // add setPreference job
+      jobs.push({
+        job: 'setPreference',
+        username: agentUsername,
+        role: 'agent'
+      })
       console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent complete.')
     }
     // mark agent provisioned for this user in our cloud db
@@ -121,6 +203,12 @@ router.post('/', async function (req, res, next) {
         password,
         enterpriseRole: 'Contact Center - Manager',
         enterpriseRoleId: '5e99645c25d9431884faad71'
+      })
+      // add setPreference job
+      jobs.push({
+        job: 'setPreference',
+        username: supervisorUsername,
+        role: 'supervisor'
       })
       console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor complete.')
     }
