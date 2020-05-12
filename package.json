@@ -27,6 +27,6 @@
     "mongodb": "^3.3.0-beta2",
     "node-fetch": "^2.6.0",
     "request-ip": "^2.1.3",
-    "wxm-api-client": "^1.0.3"
+    "wxm-api-client": "^1.1.0"
   }
 }
