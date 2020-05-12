@@ -199,14 +199,15 @@ router.post('/', async function (req, res, next) {
     } else {
       console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor...')
       // create supervisor
-      await wxm.createUser({
+      const options = {
         name: `${supervisorName} ${userId}`,
         username: supervisorUsername,
         email: supervisorEmail,
         password,
         enterpriseRole: 'Contact Center - Manager',
         enterpriseRoleId: '5e99645c25d9431884faad71'
-      })
+      }
+      await wxm.createUser(options)
       // add setPreference job
       jobs.push({
         job: 'setPreference',
