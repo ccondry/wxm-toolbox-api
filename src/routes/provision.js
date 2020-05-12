@@ -17,12 +17,12 @@ function sleep (ms) {
 // run jobs constantly, with a throttle
 async function runJobs () {
   try {
+    const validJobs = []
     // are there any jobs?
     if (jobs.length) {
       console.log('found', jobs.length, 'WXM set preference jobs...')
-      let changes = 0
       // get preferences
-      const preferences = wxm.listPreferences()
+      const preferences = await wxm.listPreferences()
       // update preferences cache with each job's data
       for (const job of jobs) {
         // add agents and supervisors to Contact Center view
@@ -30,14 +30,14 @@ async function runJobs () {
           const viewName = 'Contact Center'
           const view = preferences.views.find(v => v.viewName === viewName)
           const users = view.globalSyndicated.users
-          if (users.includes(username)) {
+          if (users.includes(job.username)) {
             // already in list
-            console.log(username, 'was already in the', viewName, 'view')
+            console.log(job.username, 'was already in the', viewName, 'view')
           } else {
             // add to list
-            console.log('adding', username, 'to the', viewName, 'view')
-            users.push(username)
-            changes++
+            console.log('adding', job.username, 'to the', viewName, 'view')
+            users.push(job.username)
+            validJobs.push(job)
           }
         }
 
@@ -47,19 +47,19 @@ async function runJobs () {
           for (const viewName of viewNames) {
             const view = preferences.views.find(v => v.viewName === viewName)
             const users = view.globalSyndicated.users
-            if (users.includes(username)) {
+            if (users.includes(job.username)) {
               // already in list
-              console.log(username, 'was already in the', viewName, 'view')
+              console.log(job.username, 'was already in the', viewName, 'view')
             } else {
               // add to list
-              console.log('adding', username, 'to the', viewName, 'view')
-              users.push(username)
-              changes++
+              console.log('adding', job.username, 'to the', viewName, 'view')
+              users.push(job.username)
+              validJobs.push(job)
             }
           }
         }
       }
-      if (changes > 0) {
+      if (validJobs.length > 0) {
         // save updated preferences on server
         await wxm.setPreferences(preferences)
         console.log('saved WXM preferences for', jobs.length, 'usernames')
@@ -67,10 +67,13 @@ async function runJobs () {
         // no changes
         console.log('no changes to save to WXM preferences.')
       }
+      // remove finished jobs
+      jobs.splice(0, jobs.length)
     }
   } catch (e) {
     console.log('failed to get or save WXM preferences:', e.message)
   }
+
   // wait before running again
   await sleep(throttle)
   // run again
