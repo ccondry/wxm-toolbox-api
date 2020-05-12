@@ -98,7 +98,9 @@ router.post('/', async function (req, res, next) {
         name: `${agentName} ${userId}`,
         username: agentUsername,
         email: agentEmail,
-        password
+        password,
+        enterpriseRole: 'Contact Center - Agent',
+        enterpriseRoleId: '5e9964534e67f10e4873af46'
       }
       console.log('options', options)
       await wxm.createUser(options)
@@ -116,7 +118,9 @@ router.post('/', async function (req, res, next) {
         name: `${supervisorName} ${userId}`,
         username: supervisorUsername,
         email: supervisorEmail,
-        password
+        password,
+        enterpriseRole: 'Contact Center - Manager',
+        enterpriseRoleId: '5e99645c25d9431884faad71'
       })
       console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor complete.')
     }
