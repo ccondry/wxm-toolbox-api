@@ -186,7 +186,7 @@ router.post('/', async function (req, res, next) {
       // add setPreference job
       jobs.push({
         job: 'setPreference',
-        username: agentUsername,
+        username: prefix + agentUsername,
         role: 'agent'
       })
       console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent complete.')
@@ -211,7 +211,7 @@ router.post('/', async function (req, res, next) {
       // add setPreference job
       jobs.push({
         job: 'setPreference',
-        username: supervisorUsername,
+        username: prefix + supervisorUsername,
         role: 'supervisor'
       })
       console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor complete.')
