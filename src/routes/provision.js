@@ -26,8 +26,8 @@ async function runJobs () {
       // update preferences cache with each job's data
       for (const job of jobs) {
         // add agents and supervisors to Contact Center view
-        if (['agent', 'supervisor'].includes(job.role)) {
-          const viewName = 'Contact Center'
+        if (job.role === 'agent') {
+          const viewName = 'Agent Dashboard'
           const view = preferences.views.find(v => v.viewName === viewName)
           const users = view.globalSyndicated.users
           if (users.includes(job.username)) {
@@ -43,7 +43,7 @@ async function runJobs () {
 
         // add supervisors to ATM, Website, Branch, Overall Experience
         if (job.role === 'supervisor') {
-          const viewNames = ['ATM', 'Website', 'Branch', 'Overall Experience']
+          const viewNames = ['Contact Center', 'ATM', 'Website', 'Branch', 'Overall Experience']
           for (const viewName of viewNames) {
             const view = preferences.views.find(v => v.viewName === viewName)
             const users = view.globalSyndicated.users
