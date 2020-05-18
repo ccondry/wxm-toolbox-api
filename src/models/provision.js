@@ -1,5 +1,4 @@
-const DB = require('./db')
-const db = new DB('toolbox')
+const db = require('./db')
 
 module.exports = {
   set,
@@ -15,10 +14,10 @@ async function set (data) {
     const existing = await db.findOne('provision', q)
     if (existing) {
       // update
-      await db.updateOne('provision', q, {$set: dbData})
+      await db.updateOne('toolbox', 'provision', q, {$set: dbData})
     } else {
       // create new
-      await db.insertOne('provision', dbData)
+      await db.insertOne('toolbox', 'provision', dbData)
     }
   } catch (e) {
     throw e
@@ -32,7 +31,7 @@ async function find (username) {
     const q = { username, demo: 'wxm', version: 'v1' }
     // don't return record id
     const projection = { _id: 0 }
-    return db.findOne('provision', q, {projection})
+    return db.findOne('toolbox', 'provision', q, {projection})
   } catch (e) {
     throw e
   }
