@@ -11,7 +11,7 @@ async function set (data) {
     const q = { username: data.username, demo: 'wxm', version: 'v1' }
     // build provision data object on top of input data
     const dbData = { demo: 'wxm', version: 'v1', ...data }
-    const existing = await db.findOne('provision', q)
+    const existing = await db.findOne('toolbox', 'provision', q)
     if (existing) {
       // update
       await db.updateOne('toolbox', 'provision', q, {$set: dbData})
