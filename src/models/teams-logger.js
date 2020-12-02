@@ -1,6 +1,6 @@
 const package = require('../../package.json')
 const os = require('os')
-const fetch = require('node-fetch')
+const fetch = require('./fetch')
 // find env hostname
 const hostname = os.hostname()
 
@@ -22,15 +22,17 @@ function trimMessage (message) {
 
 // main log method
 async function log () {
+  // console.log('teamslogger', Object.keys(arguments).length)
   let text = ''
   let markdown = ''
 
-  if (!arguments.length) {
+  if (Object.keys(arguments).length === 0) {
     // no arguments
     return
   }
   // has arguments
   for (const args of arguments) {
+    // console.log('args', args)
     if (typeof args === 'string') {
       // user passed a string
       text += trimMessage(args) + ' '
@@ -73,8 +75,7 @@ async function log () {
 
   // send message to room
   try {
-    await fetch('https://api.ciscospark.com/v1/messages',
-    {
+    const options = {
       method: 'POST',
       headers: {
         Authorization: 'Bearer ' + process.env.WEBEX_BOT_TOKEN
@@ -84,7 +85,9 @@ async function log () {
         text,
         markdown
       }
-    })
+    }
+    // console.log('options', options)
+    await fetch('https://webexapis.com/v1/messages', options)
   } catch (e) {
     console.log('failed to log to Webex Teams room:', e.message)
   }
