@@ -86,12 +86,33 @@ router.get('/', async function (req, res, next) {
   const operation = 'get user WXM provision status'
 
   try {
-    console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
-    // find provision data in our database
-    const data = await provisionDb.find(username)
-    console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'successful')
-    // if no data found, return empty object instead of null
-    return res.status(200).send(data || {})
+    // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
+    // create instance of the WXM client for selected vertical
+    const vertical = verticals[req.query.vertical || 'bank']
+    if (!vertical) {
+      // invalid vertical specified in request body
+      // build a nice error message about why it failed and how to fix it
+      const verticalsList = JSON.stringify(Object.keys(verticals))
+      const message = `The vertical "${req.body.vertical}" was not found. Please specify one of these: ${verticalsList}`
+      return res.status(400).send({message})
+    }
+    const wxm = new wxmClient({
+      username: vertical.username,
+      password: process.env.PASSWORD
+    })
+    
+    // find all existing users
+    const users = await wxm.listUsers()
+    console.log('found', users.length, 'users in vertical', vertical.prefix)
+    // find all WXM users belonging to this toolbox user in the specified vertical
+    const myUsers = users.filter(v => {
+      // filter by user ID
+      return v.userName.slice(-4) === userId
+    })
+    console.log('found', myUsers.length, 'my users in vertical', vertical.prefix)
+    
+    // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'successful')
+    return res.status(200).send(myUsers)
   } catch (e) {
     // error
     console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'error', e.message)
