@@ -13,6 +13,14 @@ const jobs = []
 // 5 second throttle on jobs
 const throttle = 5000
 
+// cache of users
+const cache = {}
+
+// create placeholders in cache for each vertical
+for (const key of Object.keys(verticals)) {
+  cache[key] = []
+}
+
 // an async sleep function
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -73,6 +81,44 @@ jobManager()
 //   'aol.com'
 // ]
 
+// get my users from cache or from WXM
+async function getMyUsers (vertical, userId) {
+  // look in cache first
+  try {
+    const myUsers = cache[vertical].filter(v => {
+      // filter by user ID
+      return v.userName.slice(-4) === userId
+    })
+    if (myUsers.length) {
+      return myUsers
+    } else {
+      throw Error()
+    }
+  } catch (e) {
+    try {
+      // create WXM API client for specified vertical
+      const wxm = new wxmClient({
+        username: vertical.username,
+        password: process.env.PASSWORD
+      })
+      // find all existing users in that vertical tenant
+      const users = await wxm.listUsers()
+      console.log('found', users.length, 'users in vertical', vertical.prefix)
+      // update cache
+      cache[vertical] = users
+      // find all WXM users belonging to this toolbox user in the specified vertical
+      const myUsers = users.filter(v => {
+        // filter by user ID
+        return v.userName.slice(-4) === userId
+      })
+      console.log('found', myUsers.length, 'my users in vertical', vertical.prefix)
+      return myUsers
+    } catch (e) {
+      throw e
+    }
+  }
+}
+
 // get provision status for current logged-in user from our database
 router.get('/', async function (req, res, next) {
   // console.log('request to get WXM provision status...')
@@ -96,20 +142,8 @@ router.get('/', async function (req, res, next) {
       const message = `The vertical "${req.body.vertical}" was not found. Please specify one of these: ${verticalsList}`
       return res.status(400).send({message})
     }
-    const wxm = new wxmClient({
-      username: vertical.username,
-      password: process.env.PASSWORD
-    })
     
-    // find all existing users
-    const users = await wxm.listUsers()
-    console.log('found', users.length, 'users in vertical', vertical.prefix)
-    // find all WXM users belonging to this toolbox user in the specified vertical
-    const myUsers = users.filter(v => {
-      // filter by user ID
-      return v.userName.slice(-4) === userId
-    })
-    console.log('found', myUsers.length, 'my users in vertical', vertical.prefix)
+    const myUsers = await getMyUsers(vertical, userId)
     
     // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'successful')
     return res.status(200).send(myUsers)
@@ -167,20 +201,9 @@ router.post('/', async function (req, res, next) {
     // }
     const agentEmail = email
     const supervisorEmail = email
-    // create instance of the WXM client for selected vertical
-    const wxm = new wxmClient({
-      username: vertical.username,
-      password: process.env.PASSWORD
-    })
 
     // check that the user really does not exist already
-    // find all existing users
-    const users = await wxm.listUsers()
-    // find all WXM users belonging to this toolbox user
-    const myUsers = users.filter(v => {
-      // filter by user ID
-      return v.userName.slice(-4) === userId
-    })
+    const myUsers = await getMyUsers(vertical, userId)
     // now check if the users they are trying to provision already exist
     const foundAgent = myUsers.find(v => {
       return v.userName === `${vertical.prefix}${agent}${userId}`
@@ -188,6 +211,13 @@ router.post('/', async function (req, res, next) {
     const foundSupervisor = myUsers.find(v => {
       return v.userName === `${vertical.prefix}${supervisor}${userId}`
     })
+
+    // create instance of the WXM client for selected vertical
+    const wxm = new wxmClient({
+      username: vertical.username,
+      password: process.env.PASSWORD
+    })
+    
     // did we find an existing user?
     if (foundAgent) {
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - agent already provisioned.')
