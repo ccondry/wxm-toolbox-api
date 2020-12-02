@@ -18,7 +18,10 @@ const package = require('../package.json')
 
 // JWT path exceptions - these paths can be used without a JWT required
 const exceptions = {
-  path: []
+  path: [{
+    url: /\/api\/v1\/wxm\/version/i,
+    methods: ['GET']
+  }]
 }
 // init express app, and configure it
 const app = express()
