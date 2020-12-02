@@ -1,6 +1,6 @@
 {
   "name": "wxm-toolbox-api",
-  "version": "1.6.1",
+  "version": "2020.12.2",
   "description": "dCloud Cisco Webex Experience Management toolbox REST API. Intended to run on the toolbox1 and toolbox2 servers in dCloud shared services.",
   "main": "src/index.js",
   "scripts": {
