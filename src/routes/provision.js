@@ -5,7 +5,7 @@ const provisionDb = require('../models/provision-db')
 // get/create provision on WXM
 const wxmClient = require('wxm-api-client')
 // details of the different verticals like bank, heal, product...
-const verticals = require('../models/vertical')
+const verticals = require('../models/verticals')
 
 // setPreference jobs need to be run synchronously
 const jobs = []
