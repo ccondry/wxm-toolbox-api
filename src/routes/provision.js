@@ -168,7 +168,7 @@ router.post('/', async function (req, res, next) {
     const agentEmail = email
     const supervisorEmail = email
     // create instance of the WXM client for selected vertical
-    const wxm = wxmClient({
+    const wxm = new wxmClient({
       username: vertical.username,
       password: process.env.PASSWORD
     })
