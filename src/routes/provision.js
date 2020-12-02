@@ -30,10 +30,10 @@ async function processJobs () {
         const users = view.globalSyndicated.users
         if (users.includes(job.username)) {
           // already in list
-          console.log(job.username, 'was already in the', viewName, 'view')
+          // console.log(job.username, 'was already in the', viewName, 'view')
         } else {
           // add to list
-          console.log('adding', job.username, 'to the', viewName, 'view')
+          // console.log('adding', job.username, 'to the', viewName, 'view')
           users.push(job.username)
         }
       }
@@ -75,7 +75,7 @@ jobManager()
 
 // get provision status for current logged-in user from our database
 router.get('/', async function (req, res, next) {
-  console.log('request to get WXM provision status...')
+  // console.log('request to get WXM provision status...')
   const username = req.user.username
   const userId = req.user.id
   const clientIp = req.clientIp
@@ -112,7 +112,7 @@ router.post('/', async function (req, res, next) {
   const operation = 'provision user for WXM demo'
 
   try {
-    console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
+    // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
     
     // set up provision data
     // get vertical details using vertical name specified in request body
@@ -169,9 +169,9 @@ router.post('/', async function (req, res, next) {
     })
     // did we find an existing user?
     if (foundAgent) {
-      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - agent already provisioned.')
+      // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - agent already provisioned.')
     } else {
-      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent...')
+      // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent...')
       // set up new agent user profile details
       const options = {
         name: `${agentName} ${userId}`,
@@ -183,7 +183,7 @@ router.post('/', async function (req, res, next) {
         departmentId: vertical.departmentId
       }
       // debug log
-      console.log('options', options)
+      // console.log('options', options)
       // create new user on WXM
       await wxm.createUser(options)
       // add setPreference job
@@ -194,7 +194,7 @@ router.post('/', async function (req, res, next) {
         views: vertical.agentViews,
         wxm
       })
-      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent complete.')
+      // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent complete.')
     }
     // mark agent provisioned for this user in our database
     await provisionDb.set({username, id: userId, agent: true})
@@ -202,10 +202,10 @@ router.post('/', async function (req, res, next) {
     // did the supervisor agent exist?
     if (foundSupervisor) {
       // supervisor already exists
-      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - supervisor already provisioned.')
+      // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - supervisor already provisioned.')
     } else {
       // supervisor does not exist - create it
-      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor...')
+      // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor...')
       // set up new supervisor user profile details
       const options = {
         name: `${supervisorName} ${userId}`,
@@ -226,7 +226,7 @@ router.post('/', async function (req, res, next) {
         views: vertical.supervisorViews,
         wxm
       })
-      console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor complete.')
+      // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor complete.')
     }
     // mark supervisor user provisioned in our cloud db
     await provisionDb.set({username, id: userId, supervisor: true})
