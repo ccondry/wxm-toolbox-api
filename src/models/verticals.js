@@ -1,5 +1,6 @@
 const verticals = {
   bank: {
+    id: 'bank',
     prefix: 'dcwxmbank',
     username: 'dcwxmbankadmin',
     agentRoleId: '5e9964534e67f10e4873af46',
@@ -17,6 +18,7 @@ const verticals = {
     ]
   },
   heal: {
+    id: 'heal',
     prefix: 'dcwxmheal',
     username: 'dcwxmhealadmin',
     agentRoleId: '5fae38dddb430f00d09de46f',
@@ -34,6 +36,7 @@ const verticals = {
     ]
   },
   product: {
+    id: 'product',
     prefix: 'dcwxmproduct',
     username: 'dcwxmproductadmin',
     agentRoleId: '5fae3b82d82ff619989ecec7',
@@ -51,6 +54,7 @@ const verticals = {
     ]
   },
   retail: {
+    id: 'retail',
     prefix: 'dcwxmretail',
     username: 'dcwxmretailadmin',
     agentRoleId: '5fae3b4cd82ff619989eceb3',

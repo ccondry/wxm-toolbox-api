@@ -6,86 +6,47 @@ const provisionDb = require('../models/provision-db')
 const wxmClient = require('wxm-api-client')
 // details of the different verticals like bank, heal, product...
 const verticals = require('../models/verticals')
+const teamsLogger = require('../models/teams-logger')
 
 // setPreference jobs need to be run synchronously
-const jobs = []
-
-// 5 second throttle on jobs
-const throttle = 5000
+const jobs = require('../models/jobs')
 
 // cache of users
 const cache = {}
 
 // create placeholders in cache for each vertical
 for (const key of Object.keys(verticals)) {
-  cache[key] = []
+  const vertical = verticals[key]
+  cache[vertical.id] = []
 }
 
-// an async sleep function
-function sleep (ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+// fill cache now
+for (const key of Object.keys(verticals)) {
+  const vertical = verticals[key]
+  // create WXM API client for specified vertical
+  const wxm = new wxmClient({
+    username: vertical.username,
+    password: process.env.PASSWORD
+  })
+  // console.log('updating cache for vertical', key)
+  // cache existing users
+  wxm.listUsers()
+  .then(users => {
+    // console.log('cache updated for vertical', key)
+    cache[vertical.id] = users
+  })
+  .catch(e => {
+    const message = `failed to get WXM users list for vertical "${key}": ${e.message}`
+    console.log(message)
+    teamsLogger.log(message)
+  })
 }
-
-async function processJobs () {
-  try {
-    // update preferences cache with each job's data
-    for (const job of jobs) {
-      // get preferences
-      const preferences = await job.wxm.listPreferences()
-      // add user to to the globalSyndicated list
-      for (const viewName of job.views) {
-        const view = preferences.views.find(v => v.viewName === viewName)
-        const users = view.globalSyndicated.users
-        if (users.includes(job.username)) {
-          // already in list
-          // console.log(job.username, 'was already in the', viewName, 'view')
-        } else {
-          // add to list
-          // console.log('adding', job.username, 'to the', viewName, 'view')
-          users.push(job.username)
-        }
-      }
-      // update globalSyndicated list on WXM
-      await job.wxm.setPreferences(preferences)
-    }
-    // remove finished jobs from the jobs list
-    jobs.splice(0, jobs.length)
-    // done
-  } catch (e) {
-    console.log('failed to get or save WXM preferences:', e.message)
-  }
-}
-
-// run jobs constantly, with a throttle
-async function jobManager () {
-  while (true) {
-    try {
-      // process jobs list
-      await processJobs()
-    
-      // wait before loop
-      await sleep(throttle)
-    } catch (e) {
-      console.log('job runner failed:', e.message)
-    }
-  }
-}
-
-// start job manager
-jobManager()
-
-// const bannedDomains = [
-//   'gmail.com',
-//   'yahoo.com',
-//   'hotmail.com',
-//   'aol.com'
-// ]
 
 // get my users from cache or from WXM
 async function getMyUsers (vertical, userId) {
   // look in cache first
   try {
-    const myUsers = cache[vertical].filter(v => {
+    const myUsers = cache[vertical.id].filter(v => {
       // filter by user ID
       return v.userName.slice(-4) === userId
     })
@@ -103,7 +64,7 @@ async function getMyUsers (vertical, userId) {
       })
       // find all existing users in that vertical tenant
       const users = await wxm.listUsers()
-      console.log('found', users.length, 'users in vertical', vertical.prefix)
+      // console.log('found', users.length, 'users in vertical', vertical.prefix)
       // update cache
       cache[vertical] = users
       // find all WXM users belonging to this toolbox user in the specified vertical
@@ -111,7 +72,7 @@ async function getMyUsers (vertical, userId) {
         // filter by user ID
         return v.userName.slice(-4) === userId
       })
-      console.log('found', myUsers.length, 'my users in vertical', vertical.prefix)
+      // console.log('found', myUsers.length, 'my users in vertical', vertical.prefix)
       return myUsers
     } catch (e) {
       throw e
@@ -121,15 +82,7 @@ async function getMyUsers (vertical, userId) {
 
 // get provision status for current logged-in user from our database
 router.get('/', async function (req, res, next) {
-  // console.log('request to get WXM provision status...')
-  const username = req.user.username
   const userId = req.user.id
-  const clientIp = req.clientIp
-  const method = req.method
-  // const host = req.get('host')
-  const path = req.originalUrl
-  // const url = req.protocol + '://' + host + path
-  const operation = 'get user WXM provision status'
 
   try {
     // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
@@ -149,9 +102,11 @@ router.get('/', async function (req, res, next) {
     return res.status(200).send(myUsers)
   } catch (e) {
     // error
-    console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'error', e.message)
+    const message = `failed to get provision status for user ${req.user.username}: ${e.message}`
+    console.log(message)
+    teamsLogger.log(message)
     // return 500 SERVER ERROR
-    return res.status(500).send(e.message)
+    return res.status(500).send({message})
   }
 })
 
@@ -159,12 +114,6 @@ router.get('/', async function (req, res, next) {
 router.post('/', async function (req, res, next) {
   const username = req.user.username
   const userId = req.user.id
-  const clientIp = req.clientIp
-  const method = req.method
-  // const host = req.get('host')
-  const path = req.originalUrl
-  // const url = req.protocol + '://' + host + path
-  const operation = 'provision user for WXM demo'
 
   try {
     // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'requested')
@@ -293,9 +242,11 @@ router.post('/', async function (req, res, next) {
     }
   } catch (e) {
     // error
-    console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'error', e.message)
+    const message = `failed to provision user ${req.user.username}: ${e.message}`
+    console.log(message)
+    teamsLogger.log(message)
     // return 500 SERVER ERROR
-    res.status(500).send(e.message)
+    return res.status(500).send({message})
   }
 })
 
