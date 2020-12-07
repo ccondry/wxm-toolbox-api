@@ -216,7 +216,9 @@ router.post('/', async function (req, res, next) {
         password,
         enterpriseRole: 'Contact Center - Manager',
         enterpriseRoleId: vertical.supervisorRoleId,
-        departmentId: vertical.departmentId
+        departmentId: vertical.departmentId,
+        isEmailVerified = false,
+        highPrecisionMode = true
       }
       // create new user on WXM
       await wxm.createUser(options)
