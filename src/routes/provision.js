@@ -180,7 +180,9 @@ router.post('/', async function (req, res, next) {
         password,
         enterpriseRole: 'Contact Center - Agent',
         enterpriseRoleId: vertical.agentRoleId,
-        departmentId: vertical.departmentId
+        departmentId: vertical.departmentId,
+        isEmailVerified = false,
+        highPrecisionMode = true
       }
       // debug log
       // console.log('options', options)
