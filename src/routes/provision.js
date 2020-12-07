@@ -181,8 +181,8 @@ router.post('/', async function (req, res, next) {
         enterpriseRole: 'Contact Center - Agent',
         enterpriseRoleId: vertical.agentRoleId,
         departmentId: vertical.departmentId,
-        isEmailVerified = false,
-        highPrecisionMode = true
+        isEmailVerified: false,
+        highPrecisionMode: true
       }
       // debug log
       // console.log('options', options)
@@ -217,8 +217,8 @@ router.post('/', async function (req, res, next) {
         enterpriseRole: 'Contact Center - Manager',
         enterpriseRoleId: vertical.supervisorRoleId,
         departmentId: vertical.departmentId,
-        isEmailVerified = false,
-        highPrecisionMode = true
+        isEmailVerified: false,
+        highPrecisionMode: true
       }
       // create new user on WXM
       await wxm.createUser(options)
