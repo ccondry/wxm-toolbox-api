@@ -9,7 +9,7 @@ const verticals = {
     supervisorViews: [
       'Contact Center',
       'ATM',
-      'Website',
+      'Net Banking',
       'Branch',
       'Overall Experience'
     ],
