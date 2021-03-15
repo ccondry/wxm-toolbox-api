@@ -13,6 +13,6 @@ module.exports = {
     'Calling'
   ],
   agentViews: [
-    'Webex Teams'
+    'Teams'
   ]
 }
