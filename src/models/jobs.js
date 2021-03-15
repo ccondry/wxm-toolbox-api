@@ -1,4 +1,5 @@
 const jsonLog = require('./json-logger')
+const provisionDb = require('./provision-db')
 
 // an async sleep function
 function sleep (ms) {
@@ -20,6 +21,10 @@ async function processJobs () {
       // add user to to the globalSyndicated list for each view that they need
       for (const viewName of job.views) {
         const view = preferences.views.find(v => v.viewName === viewName)
+        if (!view) {
+          console.log('processJobs - view', viewName, 'not found in preferences.views')
+          continue
+        }
         const users = view.globalSyndicated.users
         if (users.includes(job.username)) {
           // already in list
@@ -34,6 +39,13 @@ async function processJobs () {
       jsonLog(`set-preferences-${job.username}`, preferences)
       // update globalSyndicated list on WXM
       await job.wxm.setPreferences(preferences)
+      // update user provision data
+      await provisionDb.set({
+        id: job.userId,
+        vertical: job.vertical.id,
+        type: job.role,
+        status: 'complete'
+      })
     }
     // remove finished jobs from the jobs list
     jobs.splice(0, jobs.length)

@@ -107,8 +107,15 @@ router.post('/', async function (req, res, next) {
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - agent already provisioned.')
       // is the agent fully provisioned in the right views?
       if (myProvisionedUsers.find(v => v.id === foundAgent.id)) {
-        // agent user is fully provisioned in this vertical. continue.
-        // console.log('agent', foundAgent.userName, 'has all the correct views for', vertical.id)
+        // agent user is fully provisioned in this vertical
+        // mark agent provisioned for this user in our database
+        console.log('agent', foundAgent.userName, 'has all the correct views for', vertical.id)
+        await provisionDb.set({
+          id: userId,
+          vertical: vertical.id,
+          type: 'agent',
+          status: 'complete'
+        })
       } else {
         // agent user is created but not provisioned in all the right views.
         // console.log('agent', foundAgent.userName, 'does not have all the correct views for', vertical.id, '. Adding them now...')
@@ -118,7 +125,9 @@ router.post('/', async function (req, res, next) {
           username: vertical.prefix + agentUsername,
           role: 'agent',
           views: vertical.agentViews,
-          wxm
+          wxm,
+          vertical,
+          userId
         })
       }
     } else {
@@ -141,18 +150,25 @@ router.post('/', async function (req, res, next) {
       jsonLog(`create-user-${agentEmail}-${vertical.id}`, options)
       // create new user on WXM
       await wxm.createUser(options)
+      // mark agent provisioned for this user in our database
+      await provisionDb.set({
+        id: userId,
+        vertical: vertical.id,
+        type: 'agent',
+        status: 'started'
+      })
       // add setPreference job
       jobs.push({
         job: 'setPreference',
         username: vertical.prefix + agentUsername,
         role: 'agent',
         views: vertical.agentViews,
-        wxm
+        wxm,
+        vertical,
+        userId
       })
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent complete.')
     }
-    // mark agent provisioned for this user in our database
-    await provisionDb.set({username, id: userId, agent: true})
     
     // did the supervisor agent exist?
     if (foundSupervisor) {
@@ -161,6 +177,14 @@ router.post('/', async function (req, res, next) {
       // is the supervisor fully provisioned in the right views?
       if (myProvisionedUsers.find(v => v.id === foundSupervisor.id)) {
         // supervisor user is fully provisioned in this vertical. continue.
+        // mark supervisor user provisioned in our cloud db
+        console.log('supervisor', foundSupervisor.userName, 'has all the correct views for', vertical.id)
+        await provisionDb.set({
+          id: userId,
+          vertical: vertical.id,
+          type: 'supervisor',
+          status: 'complete'
+        })
       } else {
         // supervisor user is created but not provisioned in all the right views
         // fix it with setPreference job
@@ -169,7 +193,9 @@ router.post('/', async function (req, res, next) {
           username: vertical.prefix + supervisorUsername,
           role: 'supervisor',
           views: vertical.supervisorViews,
-          wxm
+          wxm,
+          vertical,
+          userId
         })
       }
     } else {
@@ -191,28 +217,29 @@ router.post('/', async function (req, res, next) {
       jsonLog(`create-user-${agentEmail}-${vertical.id}`, options)
       // create new user on WXM
       await wxm.createUser(options)
+      // mark supervisor user provisioned in our cloud db
+      await provisionDb.set({
+        id: userId,
+        vertical: vertical.id,
+        type: 'supervisor',
+        status: 'started'
+      })
       // add setPreference job for the new user on WXM
       jobs.push({
         job: 'setPreference',
         username: vertical.prefix + supervisorUsername,
         role: 'supervisor',
         views: vertical.supervisorViews,
-        wxm
+        wxm,
+        vertical,
+        userId
       })
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor complete.')
     }
-    // mark supervisor user provisioned in our cloud db
-    await provisionDb.set({username, id: userId, supervisor: true})
 
-    if (foundAgent && foundSupervisor) {
-      // already provisioned
-      // return 200 OK with message
-      return res.status(200).send('Agent and supervisor already provisioned. Not creating again.')
-    } else {
-      // provision complete
-      // return 200 OK with message
-      return res.status(200).send('Agent and supervisor account have been provisioned. Check your email.')
-    }
+    // provision complete
+    // return 200 OK with message
+    return res.status(200).send('Agent and supervisor account have been provisioned. Check your email.')
   } catch (e) {
     // error
     const message = `failed to provision user ${req.user.username}: ${e.message}`
