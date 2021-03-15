@@ -8,78 +8,10 @@ const wxmClient = require('wxm-api-client')
 const verticals = require('../models/verticals')
 const teamsLogger = require('../models/teams-logger')
 const jsonLog = require('../models/json-logger')
+const cache = require('../models/cache')
 
 // setPreference jobs need to be run synchronously
 const jobs = require('../models/jobs')
-
-// cache of users
-const cache = {}
-
-// create placeholders in cache for each vertical
-for (const key of Object.keys(verticals)) {
-  const vertical = verticals[key]
-  cache[vertical.id] = []
-}
-
-// fill cache now
-for (const key of Object.keys(verticals)) {
-  const vertical = verticals[key]
-  // create WXM API client for specified vertical
-  const wxm = new wxmClient({
-    username: vertical.username,
-    password: process.env.PASSWORD
-  })
-  // console.log('updating cache for vertical', key)
-  // cache existing users
-  wxm.listUsers()
-  .then(users => {
-    // console.log('cache updated for vertical', key)
-    cache[vertical.id] = users
-  })
-  .catch(e => {
-    const message = `failed to get WXM users list for vertical "${key}": ${e.message}`
-    console.log(message)
-    teamsLogger.log(message)
-  })
-}
-
-// get my users from cache or from WXM
-async function getMyUsers (vertical, userId) {
-  // look in cache first
-  try {
-    const myUsers = cache[vertical.id].filter(v => {
-      // filter by user ID
-      return v.userName.slice(-4) === userId
-    })
-    if (myUsers.length) {
-      return myUsers
-    } else {
-      throw Error()
-    }
-  } catch (e) {
-    try {
-      // create WXM API client for specified vertical
-      const wxm = new wxmClient({
-        username: vertical.username,
-        password: process.env.PASSWORD
-      })
-      // find all existing users in that vertical tenant
-      const users = await wxm.listUsers()
-      // console.log('found', users.length, 'users in vertical', vertical.prefix)
-      // update cache
-      cache[vertical] = users
-      // find all WXM users belonging to this toolbox user in the specified vertical
-      const myUsers = users.filter(v => {
-        // filter by user ID
-        return v.userName.slice(-4) === userId
-      })
-      // console.log('found', myUsers.length, 'my users in vertical', vertical.prefix)
-      return myUsers
-    } catch (e) {
-      throw e
-    }
-  }
-}
 
 // get provision status for current logged-in user from our database
 router.get('/', async function (req, res, next) {
@@ -97,7 +29,7 @@ router.get('/', async function (req, res, next) {
       return res.status(400).send({message})
     }
     
-    const myUsers = await getMyUsers(vertical, userId)
+    const myUsers = await cache.getMyProvisionedUsers(vertical, userId)
     
     // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, 'successful')
     return res.status(200).send(myUsers)
@@ -153,7 +85,7 @@ router.post('/', async function (req, res, next) {
     const supervisorEmail = email
 
     // check that the user really does not exist already
-    const myUsers = await getMyUsers(vertical, userId)
+    const myUsers = await cache.getAllMyUsers(vertical, userId)
     // now check if the users they are trying to provision already exist
     const foundAgent = myUsers.find(v => {
       return v.userName === `${vertical.prefix}${agent}${userId}`
@@ -167,10 +99,28 @@ router.post('/', async function (req, res, next) {
       username: vertical.username,
       password: process.env.PASSWORD
     })
-    
-    // did we find an existing user?
+
+    // get fully provisioned users list for this vertical for this user
+    const myProvisionedUsers = await cache.getMyProvisionedUsers(vertical, userId)
+    // did we find an existing agent user?
     if (foundAgent) {
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - agent already provisioned.')
+      // is the agent fully provisioned in the right views?
+      if (myProvisionedUsers.find(v => v.id === foundAgent.id)) {
+        // agent user is fully provisioned in this vertical. continue.
+        // console.log('agent', foundAgent.userName, 'has all the correct views for', vertical.id)
+      } else {
+        // agent user is created but not provisioned in all the right views.
+        // console.log('agent', foundAgent.userName, 'does not have all the correct views for', vertical.id, '. Adding them now...')
+        // fix it with setPreference job.
+        jobs.push({
+          job: 'setPreference',
+          username: vertical.prefix + agentUsername,
+          role: 'agent',
+          views: vertical.agentViews,
+          wxm
+        })
+      }
     } else {
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning agent...')
       // set up new agent user profile details
@@ -208,6 +158,20 @@ router.post('/', async function (req, res, next) {
     if (foundSupervisor) {
       // supervisor already exists
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - supervisor already provisioned.')
+      // is the supervisor fully provisioned in the right views?
+      if (myProvisionedUsers.find(v => v.id === foundSupervisor.id)) {
+        // supervisor user is fully provisioned in this vertical. continue.
+      } else {
+        // supervisor user is created but not provisioned in all the right views
+        // fix it with setPreference job
+        jobs.push({
+          job: 'setPreference',
+          username: vertical.prefix + supervisorUsername,
+          role: 'supervisor',
+          views: vertical.supervisorViews,
+          wxm
+        })
+      }
     } else {
       // supervisor does not exist - create it
       // console.log('user', username, userId, 'at IP', clientIp, operation, method, path, ' - provisioning supervisor...')
