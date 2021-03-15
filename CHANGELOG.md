@@ -4,6 +4,12 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.3.15
+
+### Features
+* **Logging:** Log POST request body to JSON files for debugging.
+
+
 # 2020.12.7-1
 
 ### Bug Fixes
