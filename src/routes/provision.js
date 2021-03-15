@@ -7,6 +7,7 @@ const wxmClient = require('wxm-api-client')
 // details of the different verticals like bank, heal, product...
 const verticals = require('../models/verticals')
 const teamsLogger = require('../models/teams-logger')
+const jsonLog = require('../models/json-logger')
 
 // setPreference jobs need to be run synchronously
 const jobs = require('../models/jobs')
@@ -186,6 +187,8 @@ router.post('/', async function (req, res, next) {
       }
       // debug log
       // console.log('options', options)
+      // save JSON body as local file
+      jsonLog(`create-user-${agentEmail}-${vertical.id}`, options)
       // create new user on WXM
       await wxm.createUser(options)
       // add setPreference job
@@ -220,6 +223,8 @@ router.post('/', async function (req, res, next) {
         isEmailVerified: false,
         highPrecisionMode: true
       }
+      // save JSON body as local file
+      jsonLog(`create-user-${agentEmail}-${vertical.id}`, options)
       // create new user on WXM
       await wxm.createUser(options)
       // add setPreference job for the new user on WXM

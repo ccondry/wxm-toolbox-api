@@ -1,3 +1,5 @@
+const jsonLog = require('./json-logger')
+
 // an async sleep function
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -15,7 +17,7 @@ async function processJobs () {
     for (const job of jobs) {
       // get preferences
       const preferences = await job.wxm.listPreferences()
-      // add user to to the globalSyndicated list
+      // add user to to the globalSyndicated list for each view that they need
       for (const viewName of job.views) {
         const view = preferences.views.find(v => v.viewName === viewName)
         const users = view.globalSyndicated.users
@@ -28,6 +30,8 @@ async function processJobs () {
           users.push(job.username)
         }
       }
+      // save JSON body as local file
+      jsonLog(`set-preferences-${job.username}`, preferences)
       // update globalSyndicated list on WXM
       await job.wxm.setPreferences(preferences)
     }
