@@ -113,7 +113,7 @@ async function getMyProvisionedUsers (vertical, userId) {
         })
         // filter out this user if they don't have all the required views
         if (!hasView) {
-          console.log('user', user.name, 'does not have all the views for vertical', vertical.id)
+          // console.log('user', user.name, 'does not have all the views for vertical', vertical.id)
           return false
         } else {
         }
