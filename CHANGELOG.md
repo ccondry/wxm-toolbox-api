@@ -4,6 +4,17 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.3.15-3
+
+### Features
+* **Provision:** Add support for fixing provision data when user already exists.
+* **Product Vertical:** Update view names for Product vertical.
+
+### Bug Fixes
+* **Cache:** Fix issue where user cache was not updated properly after the
+initial startup caching. Replace user cache every 10 minutes.
+
+
 # 2021.3.15-2
 
 ### Features
