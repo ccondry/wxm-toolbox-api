@@ -1,6 +1,7 @@
 const package = require('../../package.json')
 const os = require('os')
 const fetch = require('./fetch')
+const globals = require('./globals')
 // find env hostname
 const hostname = os.hostname()
 
@@ -72,16 +73,25 @@ async function log () {
   text = textPrefix + text
   // add prefix to markdown
   markdown = markdownPrefix + markdown
-
+  
+  // get log token and room ID from globals
+  const token = await globals.getAsync('toolbotToken')
+  let roomId
+  if (process.env.NODE_ENV === 'production') {
+    roomId = await globals.getAsync('productionLogRoomId')
+  } else {
+    roomId = await globals.getAsync('developmentLogRoomId')
+  }
+  
   // send message to room
   try {
     const options = {
       method: 'POST',
       headers: {
-        Authorization: 'Bearer ' + process.env.WEBEX_BOT_TOKEN
+        Authorization: 'Bearer ' + token
       },
       body: {
-        roomId: process.env.LOGS_ROOM_ID,
+        roomId,
         text,
         markdown
       }
