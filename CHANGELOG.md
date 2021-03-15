@@ -4,6 +4,13 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.3.15-1
+
+### Features
+* **Logging:** Get Webex logs room ID and REST token from toolbox global
+variables.
+
+
 # 2021.3.15
 
 ### Features
