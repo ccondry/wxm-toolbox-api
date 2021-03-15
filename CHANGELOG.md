@@ -4,6 +4,12 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.3.15-2
+
+### Features
+* **Product Vertical:** Update product views for supervisor for the v2 demo.
+
+
 # 2021.3.15-1
 
 ### Features
