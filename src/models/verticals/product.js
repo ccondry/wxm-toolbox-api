@@ -7,10 +7,10 @@ module.exports = {
   departmentId: '5fae3b91d82ff619989eced1',
   supervisorViews: [
     'Overall Experience',
-    'Post Webex Meeting Web Experience',
-    'Webex Teams',
-    'Webex Devices',
-    'Webex Calling'
+    'Meetings',
+    'Teams',
+    'Devices',
+    'Calling'
   ],
   agentViews: [
     'Webex Teams'
