@@ -4,6 +4,13 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.3.15-4
+
+### Features
+* **Provision:** Improve provision status detail to started/complete for agent
+and supervisor.
+
+
 # 2021.3.15-3
 
 ### Features
