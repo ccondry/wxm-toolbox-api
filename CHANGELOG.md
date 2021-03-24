@@ -4,6 +4,13 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.3.24
+
+### Features
+* **Provision:** Retry the provision REST requests to WXM up to 10 times each if
+they fail due to network connectivity errors.
+
+
 # 2021.3.15-4
 
 ### Features
