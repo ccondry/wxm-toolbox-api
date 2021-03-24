@@ -12,6 +12,13 @@ const cache = require('../models/cache')
 
 // setPreference jobs need to be run synchronously
 const jobs = require('../models/jobs')
+// general network error messages regex
+const generalNetworkError = /getaddrinfo ENOTFOUND|getaddrinfo EAI_AGAIN|connect ETIMEDOUT|read ECONNRESET|504 Gateway Time-out|502 Bad Gateway/
+
+// an async sleep function
+function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 // get provision status for current logged-in user from our database
 router.get('/', async function (req, res, next) {
@@ -148,8 +155,36 @@ router.post('/', async function (req, res, next) {
       // console.log('options', options)
       // save JSON body as local file
       jsonLog(`create-user-${agentEmail}-${vertical.id}`, options)
-      // create new user on WXM
-      await wxm.createUser(options)
+      // create new user on WXM. retry if we get general network errors.
+      const maxTries = 10
+      let tries = 0
+      let done = false
+      let lastError = ''
+      while (tries < maxTries) {
+        try {
+          // try to create the user
+          await wxm.createUser(options)
+          // done
+          done = true
+          break
+        } catch (e) {
+          if (generalNetworkError.test(e.message)) {
+            // general network error - retry on next loop
+            lastError = e
+          } else {
+            // unexpected error - rethrow it
+            throw e
+          }
+        }
+        // increment counter
+        tries++
+        // wait a moment before retrying
+        await sleep(1000)
+      }
+      if (!done) {
+        // never completed it
+        throw Error(`Failed to create WXM user ${options.username} after ${tries} retries. Last error was: ${e.message}`)
+      }
       // mark agent provisioned for this user in our database
       await provisionDb.set({
         id: userId,
@@ -215,8 +250,36 @@ router.post('/', async function (req, res, next) {
       }
       // save JSON body as local file
       jsonLog(`create-user-${agentEmail}-${vertical.id}`, options)
-      // create new user on WXM
-      await wxm.createUser(options)
+      // create new user on WXM. retry if we get general network errors.
+      const maxTries = 10
+      let tries = 0
+      let done = false
+      let lastError = ''
+      while (tries < maxTries) {
+        try {
+          // try to create the user
+          await wxm.createUser(options)
+          // done
+          done = true
+          break
+        } catch (e) {
+          if (generalNetworkError.test(e.message)) {
+            // general network error - retry on next loop
+            lastError = e
+          } else {
+            // unexpected error - rethrow it
+            throw e
+          }
+        }
+        // increment counter
+        tries++
+        // wait a moment before retrying
+        await sleep(1000)
+      }
+      if (!done) {
+        // never completed it
+        throw Error(`Failed to create WXM user ${options.username} after ${tries} retries. Last error was: ${e.message}`)
+      }
       // mark supervisor user provisioned in our cloud db
       await provisionDb.set({
         id: userId,
