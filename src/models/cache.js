@@ -4,6 +4,7 @@ const verticals = require('./verticals')
 const wxmClient = require('wxm-api-client')
 // cache of users
 const usersCache = {}
+const teamsLogger = require('./teams-logger')
 
 // create placeholders in usersCache for each vertical
 for (const key of Object.keys(verticals)) {
