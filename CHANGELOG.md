@@ -4,6 +4,12 @@ Version numbers are semver-compatible dates in YYYY.MM.DD-X format,
 where X is the revision number
 
 
+# 2021.6.29
+
+### Fixes
+* **Provision:** Fix crash related to Webex logging.
+
+
 # 2021.3.24
 
 ### Features
