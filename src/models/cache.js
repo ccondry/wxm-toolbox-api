@@ -32,7 +32,10 @@ function fillCache () {
     .catch(e => {
       const message = `failed to get WXM users list for vertical "${key}": ${e.message}`
       console.log(message)
-      teamsLogger.log(message)
+      // ignore timeout messages
+      if (!e.message.includes('ETIMEDOUT')) {
+        teamsLogger.log(message)
+      }
     })
   }
 }
